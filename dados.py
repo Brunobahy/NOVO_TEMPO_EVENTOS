@@ -20,6 +20,7 @@ class Pessoa:
         self.pedido = pedido
         self.checkbox = None
         self.atualizaEndereco()
+        self.novo = False
 
     def atualizaEndereco(self):
         igrejas = read_file("Endereço igrejas.xlsx")
@@ -113,7 +114,7 @@ def atualizaArquivo(lista: list[Pessoa], arquivo: list[dict]):
     if len(lista) > 0:
         print("Excluindo os seguintes nomes:")
         for i in lista:
-            print(i.get("Nome Completo", "N/A"))
+            print(i.get("NOME DO USUARIO", "N/A"))
             # Remove do pedido original se existir
             if i in arquivo:
                 arquivo.remove(i)

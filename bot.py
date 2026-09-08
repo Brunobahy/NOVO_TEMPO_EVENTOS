@@ -52,7 +52,7 @@ feitos = []
 novos = []
 enviados = []
 erros = []
-
+pedidos = read_file("Inscritos")
 # Variaveis
 global stop_flag
 stop_flag = False
@@ -98,6 +98,19 @@ def await_by_xpath(xpth: str) -> None:
 
 def await_by_css(css: str) -> None:
     WebDriverWait(nv, 5).until(EC.presence_of_element_located((By.XPATH, css)))
+
+
+def await_load():
+    print("Esperando LOAD")
+    espera(1)
+    try:
+        load = nv.find_element(By.CLASS_NAME, "z-loading")
+        if load:
+            print("Outro LOAD")
+            await_load()
+    except:
+        print("Saindo LOAD")
+        return
 
 
 def logar_atendimento():
@@ -164,7 +177,7 @@ def acessa_user(dados: Pessoa, i):
     pessoa = nv.find_element(By.CLASS_NAME, "z-listitem")
 
     ActionChains(nv).double_click(pessoa).perform()
-    espera(5)
+    await_load()
 
 
 def registra_user(dados: Pessoa):
@@ -174,19 +187,16 @@ def registra_user(dados: Pessoa):
     # registra uma nova pessoa
     print("registra uma nova pessoa")
     nv.find_element(By.XPATH, "//td[normalize-space(text())='Novo']").click()
-    espera(5)
+    await_load()
 
     # coloca Celular
     print("coloca Celular")
     nv.find_elements(By.CLASS_NAME, "z-textbox")[34].send_keys(
         str(dados.phone).replace("+55", "")
     )
-    espera(3)
 
     # nv.find_elements(By.CLASS_NAME, "z-datebox-inp")[1].send_keys(dados.)
     # nv.find_elements(By.CLASS_NAME, "z-datebox-inp")[1].click()
-
-    espera(1)
 
     # nv.find_elements(By.CLASS_NAME, "z-combobox-btn")[5].click()
     # if dados["sexo"] == "Feminino":
@@ -230,13 +240,13 @@ def registra_user(dados: Pessoa):
     nv.find_elements(By.CLASS_NAME, "z-tab-text")[10].click()
     # coloca CEP e Num
     print("coloca CEP e Num")
-    espera(5)
+    await_load()
     nv.find_elements(By.CLASS_NAME, "z-textbox")[26].send_keys(dados.cep)
     nv.find_elements(By.CLASS_NAME, "z-textbox")[28].send_keys(dados.num)
 
     # coloca complemento
     print("coloca complemento")
-    espera(5)
+    await_load()
     nv.find_elements(By.CLASS_NAME, "z-textbox")[29].send_keys(dados.complemento)
     # se não puxar rua e bairro coloca eles
     print("se não puxar rua e bairro coloca eles")
@@ -270,10 +280,9 @@ def registra_user(dados: Pessoa):
         ).click()
         espera(1)
         nv.find_elements(By.CLASS_NAME, "z-button-cm")[27].click()
-        espera(10)
+        await_load()
     except:
         print("Email não duplicado!")
-    novos.append(dados.pedido)
     espera(2)
 
     nv.execute_script("window.scrollTo(0, 0);")
@@ -391,6 +400,14 @@ def atualiza_user(dados: Pessoa):
     else:
         nv.find_elements(By.CLASS_NAME, "z-button-cm")[29].click()
 
+    await_load()
+    try:
+        nv.find_element(By.CLASS_NAME, "z-window-highlighted-close").click()
+        nv.find_element(By.CLASS_NAME, "z-window-highlighted-close").click()
+    except:
+        ActionChains(nv).send_keys(Keys.ESCAPE).perform()
+        ActionChains(nv).send_keys(Keys.ESCAPE).perform()
+
 
 def envia_lgpd(dados: Pessoa):
     nv.execute_script("window.scrollTo(0, 0);")
@@ -442,58 +459,63 @@ def envia_lgpd(dados: Pessoa):
 def envia_revista(dados: Pessoa):
 
     # await_by_xpath("//span[text()='Atendimento' and contains(@class, 'z-tab-text') ]")
-    espera(5)
+    await_load()
     nv.execute_script("window.scrollTo(0, 0);")
 
     print("acessa Atendimentos")
     nv.find_element(
         By.XPATH, "//span[text()='Atendimento' and contains(@class, 'z-tab-text') ]"
     ).click()
+    print("esperando 2")
     espera(2)
+    print("esperando 2")
 
-    # abre 'historico' 'todos'
-    print("abre 'historico' 'todos'")
+    if not dados.novo:
+        # abre 'historico' 'todos'
+        print("abre 'historico' 'todos'")
 
-    # encontra Botões
-    print("encontra Botões")
+        # encontra Botões
+        print("encontra Botões")
 
-    btns = nv.find_elements(By.CLASS_NAME, "z-button-cm")
-    espera(1)
-    btns[54].click()
-    espera(5)
-
-    # Filtra apenas cursos biblicos
-    print("Filtra apenas cursos biblicos")
-
-    filtro = nv.find_elements(By.CSS_SELECTOR, ".z-combobox-inp")[18].get_attribute(
-        "value"
-    )
-    if filtro != "Curso Bíblico":
-        nv.find_elements(By.CSS_SELECTOR, ".z-combobox-btn")[18].click()
+        btns = nv.find_elements(By.CLASS_NAME, "z-button-cm")
         espera(1)
-        ActionChains(nv).send_keys(Keys.ARROW_DOWN).send_keys(
-            Keys.ARROW_DOWN
-        ).send_keys(Keys.ENTER).perform()
-        espera(5)
+        btns[54].click()
+        await_load()
+
+        # Filtra apenas cursos biblicos
+        print("Filtra apenas cursos biblicos")
+
+        filtro = nv.find_elements(By.CSS_SELECTOR, ".z-combobox-inp")[18].get_attribute(
+            "value"
+        )
+        if filtro != "Curso Bíblico":
+            nv.find_elements(By.CSS_SELECTOR, ".z-combobox-btn")[18].click()
+            espera(1)
+            ActionChains(nv).send_keys(Keys.ARROW_DOWN).send_keys(
+                Keys.ARROW_DOWN
+            ).send_keys(Keys.ENTER).perform()
+            espera(5)
+        else:
+            nv.find_elements(By.CSS_SELECTOR, ".z-combobox-btn")[18].click()
+            ActionChains(nv).send_keys(Keys.ARROW_DOWN).send_keys(
+                Keys.ARROW_DOWN
+            ).send_keys(Keys.ENTER).perform()
+            espera(2)
+            ActionChains(nv).send_keys(Keys.ARROW_UP).send_keys(
+                Keys.ARROW_UP
+            ).send_keys(Keys.ENTER).perform()
+            espera(5)
+
+        # valida data
+        print("valida data ")
+        tab = nv.find_elements(By.CSS_SELECTOR, ".z-listbox-body")[5]
+        cels = tab.find_elements(By.CSS_SELECTOR, ".z-listcell[title]")
+
+        try:
+            data = cels[1].get_attribute("title")
+        except:
+            data = "05/11/2022 10:16:27"
     else:
-        nv.find_elements(By.CSS_SELECTOR, ".z-combobox-btn")[18].click()
-        ActionChains(nv).send_keys(Keys.ARROW_DOWN).send_keys(
-            Keys.ARROW_DOWN
-        ).send_keys(Keys.ENTER).perform()
-        espera(2)
-        ActionChains(nv).send_keys(Keys.ARROW_UP).send_keys(Keys.ARROW_UP).send_keys(
-            Keys.ENTER
-        ).perform()
-        espera(5)
-
-    # valida data
-    print("valida data ")
-    tab = nv.find_elements(By.CSS_SELECTOR, ".z-listbox-body")[5]
-    cels = tab.find_elements(By.CSS_SELECTOR, ".z-listcell[title]")
-
-    try:
-        data = cels[1].get_attribute("title")
-    except:
         data = "05/11/2022 10:16:27"
 
     # verifica se pode enviar revista
@@ -525,7 +547,7 @@ def envia_revista(dados: Pessoa):
             ].click()
             espera(5)
         except:
-            espera(10)
+            await_load()
         # continuar pedindo revista
         print("continuar pedindo revista")
         enviados.append(dados.pedido)
@@ -568,28 +590,29 @@ def automacao():
     abre_navegador()
     logar_atendimento()
     # Começa o loop
-    pedidos = read_file("Inscritos")
+
     for i, pedido in enumerate(pedidos):
+
+        try:
+            campoUser = nv.find_element("class name", "z-textbox")
+            if campoUser:
+                logar_atendimento()
+        except:
+            pass
 
         if stop_flag:
             nv.quit()
             break
         dados = Pessoa(pedido)
-        userNovo = False
         try:
             acessa_user(dados, i)
-
-        except:
-            userNovo = True
-            if not try_maker(registra_user, dados):
-                continue
-
-        if userNovo == False:
-            # extrai os dados dos campos e compara com a planilha
             if not try_maker(atualiza_user, dados):
                 continue
-        else:
-            print("Novo Usuario")
+
+        except:
+            dados.novo = True
+            if not try_maker(registra_user, dados):
+                continue
 
         # enviar LGPD
         print(dados.checkbox)
@@ -617,8 +640,11 @@ def automacao():
         except:
             ActionChains(nv).send_keys(Keys.ENTER).perform()
 
-        espera(10)
+        await_load()
         feitos.append(dados.pedido)
+        if dados.novo:
+            novos.append(dados.pedido)
+
         # altera janela
         if janela:
             janela.after(0, atualizar_label)
@@ -642,10 +668,12 @@ def atualizar_label():
         lb_erro.config(text=f"{len(erros)}")
     if lb_novos:
         lb_novos.config(text=f"{len(novos)}")
+    if lb_enviado:
+        lb_enviado.config(text=f"{len(enviados)}")
 
 
 def criar_interface():
-    global lb_num, lb_erro, lb_cadastros, lb_novos, janela
+    global lb_num, lb_erro, lb_cadastros, lb_novos, janela, lb_enviado
 
     janela = tk.Tk()
     janela.title("Controle da Automação")
@@ -674,11 +702,17 @@ def criar_interface():
 
     # --- Coluna 4: Novos ---
     tk.Label(frame_status, text="Novos", font=("Arial", 11, "bold")).grid(
-        row=0, column=3, padx=10
+        row=0, column=2, padx=10
     )
     lb_novos = tk.Label(frame_status, text="0", font=("Arial", 12))
-    lb_novos.grid(row=1, column=3)
+    lb_novos.grid(row=1, column=2)
 
+    # --- Coluna 5: enviados ---
+    tk.Label(frame_status, text="Enviados", font=("Arial", 11, "bold")).grid(
+        row=0, column=3, padx=10
+    )
+    lb_enviado = tk.Label(frame_status, text="0", font=("Arial", 12))
+    lb_enviado.grid(row=1, column=3)
     # --- botões ---
 
     btn_iniciar = tk.Button(janela, text="Iniciar", width=12, command=iniciar_automacao)
@@ -695,15 +729,22 @@ criar_interface()
 
 print("****************")
 if feitos:
-    cria_arquivo_excel(feitos, f"Feitos {datetime.now().date()}")
+    cria_arquivo_excel(feitos, f"Feitos {datetime.now().date().strftime("%d-%m")}")
 if novos:
-    cria_arquivo_excel(novos, f"Novos {datetime.now().date()}")
+    cria_arquivo_excel(novos, f"Novos {datetime.now().date().strftime("%d-%m")}")
 if erros:
-    cria_arquivo_excel(erros, f"Erros {datetime.now().date()}")
+    cria_arquivo_excel(erros, f"Erros {datetime.now().date().strftime("%d-%m")}")
 if enviados:
-    cria_arquivo_excel(enviados, f"Enviados {datetime.now().date()}")
+    cria_arquivo_excel(enviados, f"Enviados {datetime.now().date().strftime("%d-%m")}")
 
+try:
+    atualizaArquivo(feitos, pedidos)
+except:
+    print("Erro ao atualizar a planilha")
 
 print(login)
 print(senha)
 print(link)
+
+# Verificar se encontra um classe, se não ele pode continuar
+# z-loading
