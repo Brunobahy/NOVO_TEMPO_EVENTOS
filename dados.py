@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 import os
+from pathlib import Path
 
 # Função para localizar arquivos do Excel ao rodar como .exe ou script Python
 
@@ -62,6 +63,12 @@ def get_excel_path(filename: str) -> str:
     - Se rodando como .exe, pega a pasta do executável
     - Se rodando como script Python, pega a pasta do script
     """
+    try:
+        file = Path(filename)
+        if file.exists():
+            return file
+    except:
+        pass
 
     base_path = (
         os.path.dirname(sys.executable)

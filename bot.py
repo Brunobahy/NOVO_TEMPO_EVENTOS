@@ -12,6 +12,7 @@ import json
 import threading
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
 from pathlib import Path
 from datetime import datetime
 
@@ -52,7 +53,7 @@ feitos = []
 novos = []
 enviados = []
 erros = []
-pedidos = read_file("Inscritos")
+planilha_pedidos = []
 # Variaveis
 global stop_flag
 stop_flag = False
@@ -585,6 +586,8 @@ def envia_revista(dados: Pessoa):
 
 
 def automacao():
+    global planilha_pedidos
+    pedidos = read_file(escolhe_arquivo())
 
     # abre navegador
     abre_navegador()
@@ -715,6 +718,7 @@ def criar_interface():
     lb_enviado.grid(row=1, column=3)
     # --- botões ---
 
+    # btn_iniciar = tk.Button(janela, text="Iniciar", width=12, command=escolhe_arquivo)
     btn_iniciar = tk.Button(janela, text="Iniciar", width=12, command=iniciar_automacao)
     btn_iniciar.pack(pady=5)
 
@@ -722,6 +726,23 @@ def criar_interface():
     btn_parar.pack(pady=5)
 
     janela.mainloop()
+
+
+def escolhe_arquivo():
+    janela.withdraw()
+
+    arquivo = filedialog.askopenfile(
+        parent=janela,
+        title="Selecione um arquivo",
+        filetypes=[
+            ("Arquivos Excel", "*.xlsx"),
+            ("Arquivos CSV", "*.csv"),
+            ("Todos os arquivos", "*.*"),
+        ],
+    )
+    janela.deiconify()
+    print(arquivo.name)
+    return arquivo.name
 
 
 criar_interface()
@@ -738,7 +759,7 @@ if enviados:
     cria_arquivo_excel(enviados, f"Enviados {datetime.now().date().strftime("%d-%m")}")
 
 try:
-    atualizaArquivo(feitos, pedidos)
+    atualizaArquivo(feitos, planilha_pedidos)
 except:
     print("Erro ao atualizar a planilha")
 
